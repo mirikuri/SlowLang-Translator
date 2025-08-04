@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SlowLang™ Translator</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .subtitle {
+            text-align: center;
+            font-style: italic;
+            color: #666;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            min-height: 100px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .speed-up {
+            background: #f44336;
+            float: right;
+        }
+        .speed-up:hover {
+            background: #d32f2f;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            min-height: 50px;
+        }
+        .translation {
+            font-size: 24px;
+            margin: 20px 0;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 5px;
+        }
+        .progress-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #4CAF50;
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .powered-by {
+            text-align: right;
+            font-size: 12px;
+            color: #999;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🕸️ SlowLang™ Translator</h1>
+        <p class="subtitle">"Мы переведём. Когда-нибудь."</p>
+        
+        <textarea id="inputText" placeholder="Введите текст для перевода..."></textarea>
+        
+        <div>
+            <button id="translateBtn">Перевести</button>
+            <button id="speedUpBtn" class="speed-up">Ускорить (999₸)</button>
+        </div>
+        
+        <div class="progress-container">
+            <div id="progressBar" class="progress-bar"></div>
+        </div>
+        
+        <div id="status" class="status">
+            Переводчик готов к работе. Введите текст и нажмите "Перевести".
+        </div>
+        
+        <div id="translation" class="translation"></div>
+        
+        <div class="powered-by">Powered by СверхМедленный GPT</div>
+    </div>
+
+    <script>
+        const translateBtn = document.getElementById('translateBtn');
+        const speedUpBtn = document.getElementById('speedUpBtn');
+        const inputText = document.getElementById('inputText');
+        const statusDiv = document.getElementById('status');
+        const translationDiv = document.getElementById('translation');
+        const progressBar = document.getElementById('progressBar');
+        let progressInterval;
+        
+        translateBtn.addEventListener('click', async () => {
+    const text = inputText.value.trim();
+    if (!text) return;
+
+    // Сброс состояния
+    translationDiv.textContent = '';
+    statusDiv.innerHTML = '🔄 Подготовка к переводу...';
+    progressBar.style.width = '0%';
+    
+    // Закрытие предыдущего соединения
+    if (eventSource) eventSource.close();
+    if (progressInterval) clearInterval(progressInterval);
+    
+    // Анимация прогресс-бара
+    animateProgressBar();
+    
+    // Создание нового EventSource с GET-запросом
+    eventSource = new EventSource(`/translate?text=${encodeURIComponent(text)}`);
+    
+    eventSource.onmessage = (event) => {
+        const data = event.data;
+        
+        if (data.startsWith('TRANSLATION:')) {
+            translationDiv.textContent = data.split(':')[1].trim();
+        } 
+        else if (data.startsWith('DONE:')) {
+            statusDiv.innerHTML = data.split(':')[1].trim();
+            finishTranslation();
+        }
+        else {
+            statusDiv.innerHTML = data;
+        }
+    };
+    
+    eventSource.onerror = () => {
+        if (!eventSource || eventSource.readyState === EventSource.CLOSED) return;
+        statusDiv.innerHTML = '❌ Произошла ошибка соединения';
+        finishTranslation();
+    };
+});
+
+function finishTranslation() {
+    if (progressInterval) {
+        clearInterval(progressInterval);
+        progressBar.style.width = '100%';
+    }
+    if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+    }
+}
+        
+        speedUpBtn.addEventListener('click', () => {
+            alert('Извините, функция "Ускорить" временно недоступна. Пожалуйста, подождите...');
+        });
+        
+        function animateProgressBar() {
+            let progress = 0;
+            let direction = 1;
+            progressInterval = setInterval(() => {
+                progress += direction * Math.random() * 10;
+                
+                if (progress >= 100) {
+                    progress = 100;
+                    direction = -1;
+                } else if (progress <= 0) {
+                    progress = 0;
+                    direction = 1;
+                }
+                
+                progressBar.style.width = `${progress}%`;
+            }, 300);
+        }
+    </script>
+</body>
+</html>
